@@ -252,7 +252,12 @@ var RubiconAdapter = function RubiconAdapter() {
       if (visitor.hasOwnProperty(key)) {
         slot.addFPV(key, visitor[key]);
       }
-    }
+    }var utils = require('../utils.js');
+var adloader = require('../adloader.js');
+var bidmanager = require('../bidmanager.js');
+var bidfactory = require('../bidfactory.js');
+
+var SharethroughAdapter = function SharethroughAdapter() {
 
     for (var key in inventory) {
       if (inventory.hasOwnProperty(key)) {
