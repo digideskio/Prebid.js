@@ -1,4 +1,4 @@
-//var utils = require('../utils.js');
+var utils = require('../utils.js');
 var adloader = require('../adloader.js');
 //var bidmanager = require('../bidmanager.js');
 //var bidfactory = require('../bidfactory.js');
@@ -17,7 +17,7 @@ var adloader = require('../adloader.js');
 */
 
 var SharethroughAdapter = function SharethroughAdapter() {
-adloader.loadScript(scriptURL, callback, cacheRequest)
+
   function _callBids(params) {
     var bids = params.bids,
         scriptUrl,
@@ -35,16 +35,15 @@ adloader.loadScript(scriptURL, callback, cacheRequest)
 
   function _buildSharethroughCall(bid) {
     var pkey = utils.getBidIdParamater('pkey', bid.params),
-      uri = 'btlr.sharethrough.com/v4?',
-      url = document.location.protocol + uri,
-      referrer = utils.getTopWindowUrl();
+      uri = '//btlr.sharethrough.com/v4',
+      url = document.location.protocol + uri;
 
     url = utils.tryAppendQueryString(url, 'placement_key', pkey);
     return url;
   }
 
   function _callback() {
-
+    console.log(arguments);
   }
 
   return {
