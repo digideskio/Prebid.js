@@ -21,7 +21,7 @@ var SharethroughAdapter = function SharethroughAdapter() {
   function _callBids(params) {
     var bids = params.bids,
         scriptUrl,
-        callback = _callback,  // Create callback function
+        callback = _callback,
         cacheRequest = false;
 
     // cycle through bids
@@ -35,7 +35,7 @@ var SharethroughAdapter = function SharethroughAdapter() {
 
   function _buildSharethroughCall(bid) {
     var pkey = utils.getBidIdParamater('pkey', bid.params),
-      uri = '//btlr.sharethrough.com/v4',
+      uri = '//btlr.sharethrough.com/v4?',
       url = document.location.protocol + uri;
 
     url = utils.tryAppendQueryString(url, 'placement_key', pkey);
