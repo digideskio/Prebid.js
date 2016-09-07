@@ -35,8 +35,6 @@ describe('sharethrough adapter', () => {
 
     beforeEach(() => {
       sandbox.stub(adloader, 'loadScript');
-
-
     });
 
     it('should call loadScript on the adloader for each bid', () => {

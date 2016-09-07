@@ -9,7 +9,7 @@ var adloader = require('../adloader.js');
       {
         bidder: "sharethrough",
         params: {
-          placementKey: PKEY
+          pkey: PKEY
         }
       }
     ]
@@ -29,8 +29,6 @@ var SharethroughAdapter = function SharethroughAdapter() {
       scriptUrl = _buildSharethroughCall(bids[i]);
       adloader.loadScript(scriptUrl, callback, cacheRequest);
     }
-
-    return 'foo';
   }
 
   function _buildSharethroughCall(bid) {
@@ -44,6 +42,11 @@ var SharethroughAdapter = function SharethroughAdapter() {
 
   function _callback() {
     console.log(arguments);
+
+
+    // If the bid is valid: Use bidfactory.createBid(1) to create the bidObject.
+    // If the bid is invalid (no fill or error): Use bidfactory.createBid(2) to create the bidObject.
+    // bidmanager.addBidResponse(adUnitCode, bidObject);
   }
 
   return {
