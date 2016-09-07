@@ -41,7 +41,7 @@ $$PREBID_GLOBAL$$._adsReceived = [];
 $$PREBID_GLOBAL$$._sendAllBids = false;
 
 //default timeout for all bids
-$$PREBID_GLOBAL$$.bidderTimeout = $$PREBID_GLOBAL$$.bidderTimeout || 3000;
+$$PREBID_GLOBAL$$.bidderTimeout = $$PREBID_GLOBAL$$.bidderTimeout || 5000;
 $$PREBID_GLOBAL$$.logging = $$PREBID_GLOBAL$$.logging || false;
 
 //let the world know we are loaded
