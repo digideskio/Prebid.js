@@ -48,22 +48,26 @@ var SharethroughAdapter = function SharethroughAdapter() {
 
   function _callback() {
     if (httpRequest.readyState === XMLHttpRequest.DONE) {
-      let bidObj = utils.getBidRequest(bidId),
-        bid;
+      let bid, bidObj = utils.getBidRequest(bidId);
+      console.log(bidObj);
       if (httpRequest.status === 200) {
         try {
-          let response = JSON.parse(httpRequest.responseText);
+          const response = JSON.parse(httpRequest.responseText),
+            pkey = utils.getBidIdParamater('pkey', bidObj.params),
+            windowLocation = `str_response_${bidId}`;
           bid = bidfactory.createBid(1, bidObj);
           bid.bidderCode = 'sharethrough';
-          bid.cpm = 1.0;
-          bid.width = 700;
-          bid.height = 250;
-          bid.ad = '<div data-str-native-key="9e987ada"></div><script src="//native.sharethrough.com/assets/sfp.js"></script>';
+          bid.cpm = 1.0; //response.bid
+          const size = bidObj.sizes[0];
+          bid.width = size[0];
+          bid.height = size[1];
+          bid.ad = `<div data-str-native-key="${pkey}" data-stx-response-name='${windowLocation}'></div><script>var ${windowLocation} = ${httpRequest.responseText}</script><script src="//native.sharethrough.com/assets/sfp.js"></script>`;
           bidmanager.addBidResponse(bidObj.placementCode, bid);
         } catch (e) {
+          _handleInvalidBid(bidObj);
         }
       } else {
-        console.log('There was a problem with the request.');
+        _handleInvalidBid(bidObj);
       }
     }
     // If the bid is valid: Use bidfactory.createBid(1) to create the bidObject.
@@ -73,7 +77,7 @@ var SharethroughAdapter = function SharethroughAdapter() {
 
   function _handleInvalidBid(bidObj) {
     const bid = bidfactory.createBid(2, bidObj);
-    bid
+    bidmanager.addBidResponse(bidObj.placementCode, bid);
   }
 
   return {
