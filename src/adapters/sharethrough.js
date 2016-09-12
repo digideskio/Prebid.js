@@ -46,7 +46,6 @@ var SharethroughAdapter = function SharethroughAdapter() {
     var url = "http://localhost:9292/prebid/v1?";
     url = utils.tryAppendQueryString(url, 'bid_id', bid.bidId);
     // url = utils.tryAppendQueryString(url, 'placement_key', pkey);
-    // url = utils.tryAppendQueryString(url, 'bidId', bidId);
     url = utils.tryAppendQueryString(url, 'callback', '$$PREBID_GLOBAL$$.strcallback');
     // url = utils.tryAppendQueryString(url, 'v', '$prebid.version$');
     // url = url.slice(0, -1);
