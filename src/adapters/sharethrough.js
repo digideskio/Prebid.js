@@ -53,27 +53,25 @@ var SharethroughAdapter = function SharethroughAdapter() {
 
   $$PREBID_GLOBAL$$.strcallback = function(bidResponse) {
     var bidJson = JSON.parse(bidResponse);
-      var bidId = bidJson.creatives[0].bidId;
-      let bid, bidObj = utils.getBidRequest(bidId);
-      console.log(bidJson);
-        try {
-          var windowLocation = `str_response_${bidId}`;
-          var pkey = utils.getBidIdParamater('pkey', bidObj.params);
-          console.log("pkey" + pkey);
-          bid = bidfactory.createBid(1, bidObj);
-          bid.bidderCode = 'sharethrough';
-          bid.cpm = bidJson.creatives[0].cpm; //response.bid
-          const size = bidObj.sizes[0];
-          bid.width = size[0];
-          bid.height = size[1];
-          console.log(bidObj);
-          console.log("pc " + bidObj.placementCode);
-          bid.ad = `<div data-str-native-key="${pkey}" data-stx-response-name='${windowLocation}'></div><script>var ${windowLocation} = ${bidResponse}</script><script src="//native.sharethrough.com/assets/sfp.js"></script>`;
-          bidmanager.addBidResponse(bidObj.placementCode, bid);
+    var bidId = bidJson.creatives[0].bidId;
+    let bid, bidObj = utils.getBidRequest(bidId);
+    console.log(bidJson);
+      try {
+        var windowLocation = `str_response_${bidId}`;
+        var pkey = utils.getBidIdParamater('pkey', bidObj.params);
+        console.log("pkey" + pkey);
+        bid = bidfactory.createBid(1, bidObj);
+        bid.bidderCode = 'sharethrough';
+        bid.cpm = bidJson.creatives[0].cpm; //response.bid
+        const size = bidObj.sizes[0];
+        bid.width = size[0];
+        bid.height = size[1];
+        bid.ad = `<div data-str-native-key="${pkey}" data-stx-response-name='${windowLocation}'></div><script>var ${windowLocation} = ${bidResponse}</script><script src="//native.sharethrough.com/assets/sfp.js"></script>`;
+        bidmanager.addBidResponse(bidObj.placementCode, bid);
 
-        } catch (e) {
-          _handleInvalidBid(bidObj);
-        }
+      } catch (e) {
+        _handleInvalidBid(bidObj);
+      }
 
     // If the bid is valid: Use bidfactory.createBid(1) to create the bidObject.
     // If the bid is invalid (no fill or error): Use bidfactory.createBid(2) to create the bidObject.
