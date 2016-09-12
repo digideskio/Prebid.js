@@ -33,19 +33,21 @@ var SharethroughAdapter = function SharethroughAdapter() {
     for (var i = 0; i < bids.length; i += 1) {
       var bidRequest = bids[i];
       scriptUrl = _buildSharethroughCall(bidRequest);
-      adloader.loadScript(scriptUrl);//, callback, cacheRequest);
+      adloader.loadScript(scriptUrl);
     }
   }
 
+  // TODO: change to STX endpoint once it exists
   function _buildSharethroughCall(bid) {
     // var pkey = utils.getBidIdParamater('pkey', bid.params),
     //   uri = '//btlr.sharethrough.com/v4?',
     //   url = document.location.protocol + uri;
+
     var url = "http://localhost:9292/prebid/v1?";
     url = utils.tryAppendQueryString(url, 'bid_id', bid.bidId);
     // url = utils.tryAppendQueryString(url, 'placement_key', pkey);
     // url = utils.tryAppendQueryString(url, 'bidId', bidId);
-    // url = utils.tryAppendQueryString(url, 'callback', callbackName);
+    url = utils.tryAppendQueryString(url, 'callback', '$$PREBID_GLOBAL$$.strcallback');
     // url = utils.tryAppendQueryString(url, 'v', '$prebid.version$');
     // url = url.slice(0, -1);
     return url;
@@ -62,7 +64,7 @@ var SharethroughAdapter = function SharethroughAdapter() {
         console.log("pkey" + pkey);
         bid = bidfactory.createBid(1, bidObj);
         bid.bidderCode = 'sharethrough';
-        bid.cpm = bidJson.creatives[0].cpm; //response.bid
+        bid.cpm = bidJson.creatives[0].cpm;
         const size = bidObj.sizes[0];
         bid.width = size[0];
         bid.height = size[1];
