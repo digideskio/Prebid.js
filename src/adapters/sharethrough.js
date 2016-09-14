@@ -21,64 +21,79 @@ var bidfactory = require('../bidfactory.js');
     ]
 }
 */
-var BEACON_HOST = "//b.sharethrough.com/butler?" //{arid}{awid}{type}
+var BEACON_HOST = document.location.protocol + "//b.sharethrough.com/butler?" //{arid}{awid}{type}
 var BIDDER_CODE = "sharethrough"
 
 var SharethroughAdapter = function SharethroughAdapter() {
   const xmlHttp = new XMLHttpRequest();
+  var placementCodeSet = new Set(); //placement codes we are competing in
 
   function fireWinBeacon(adserverRequestId, adWinId, type) {
-    var beaconUrl = document.location.protocol + BEACON_HOST + "arid=" + adserverRequestId + "&awid=" + adWinId + "&type=" + type;
-    httpGetAsync(beaconUrl, function(response) {console.log("response: " + response)});
+    var winBeaconUrl = BEACON_HOST;// + "arid=" + adserverRequestId + "&awid=" + adWinId + "&type=" + type + "&foo=bar";
+    winBeaconUrl = utils.tryAppendQueryString(winBeaconUrl, "arid", adserverRequestId);
+    winBeaconUrl = utils.tryAppendQueryString(winBeaconUrl, "awid", adWinId);
+    winBeaconUrl = utils.tryAppendQueryString(winBeaconUrl, "type", type);
+    winBeaconUrl = utils.tryAppendQueryString(winBeaconUrl, "foo", "bar");
+
+    httpGetAsync(winBeaconUrl, function(response) {console.log("win beacon sent successfully")});
+  }
+
+  function fireLoseBeacon(winningBidderCode, winningCPM, type)
+  {
+    var loseBeaconUrl = BEACON_HOST;
+    loseBeaconUrl = utils.tryAppendQueryString(loseBeaconUrl, "winner_bidder_code", winningBidderCode);
+    loseBeaconUrl = utils.tryAppendQueryString(loseBeaconUrl, "winner_cpm", winningCPM);
+    loseBeaconUrl = utils.tryAppendQueryString(loseBeaconUrl, "type", type);
+
+    httpGetAsync(loseBeaconUrl, function(response) {console.log("lose beacon sent successfully")});
   }
 
   function httpGetAsync(theUrl, callback)
   {
-      var xmlHttp = new XMLHttpRequest();
-      xmlHttp.onreadystatechange = function() { 
-          console.log(xmlHttp.status);
-          if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {}
-              callback(xmlHttp.responseText);
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() { 
+      console.log("ready state: " + xmlHttp.readyState);
+      console.log("status: " + xmlHttp.status);
+      if (xmlHttp.readyState == 4) {// && xmlHttp.status == 200) {
+        callback(xmlHttp.responseText);
       }
-      console.log(theUrl);
-      xmlHttp.open("GET", theUrl, true); // true for asynchronous 
-      // xmlHttp.setRequestHeader("Access-Control-Allow-Origin", "http://localhost:9999");
-      xmlHttp.send(null);
+    }
+    console.log(theUrl);
+    xmlHttp.open("GET", theUrl, true); // true for asynchronous 
+    xmlHttp.send(null);
   }
 
   var bidWon = function() { //need pkey, adserverRequestId, bidId
     var curBidderCode = arguments[0].bidderCode;
-    console.log("winner biddercode: ", curBidderCode);
     console.log(arguments[0]);
-    if(curBidderCode != BIDDER_CODE) {
+    console.log("winner biddercode: ", curBidderCode);
+    if(curBidderCode != BIDDER_CODE && placementCodeSet.has(arguments[0].adUnitCode)) {
+      fireLoseBeacon(curBidderCode, arguments[0].cpm, "headerBidLose");
+      return;
+    } else if(curBidderCode != BIDDER_CODE) {
       return;
     }
 
-    fireWinBeacon(arguments[0].adserverRequestId, arguments[0].winId, "prebidWin");
+    fireWinBeacon(arguments[0].adserverRequestId, arguments[0].winId, "headerBidWin");
   }
-
-  // var anybidwin = function() {
-  //       var curBidderCode = arguments[0].bidderCode;
-  //   console.log("winner biddercode: ", curBidderCode);
-  // }
 
   function _callBids(params) {
     var bids = params.bids,
         scriptUrl,
         cacheRequest = false;
 
-    // cycle through bids
+    console.log(params);
     pbjs.onEvent('bidWon', bidWon);
+
+    // cycle through bids
     for (var i = 0; i < bids.length; i += 1) {
-      console.log("index " + i);
       var bidRequest = bids[i];
-      // pbjs.onEvent('bidWon', anybidwin);
+      placementCodeSet.add(bidRequest.placementCode);
+
       scriptUrl = _buildSharethroughCall(bidRequest);
       adloader.loadScript(scriptUrl);
     }
   }
-
-
 
   // TODO: change to STX endpoint once it exists
   function _buildSharethroughCall(bid) {
@@ -91,32 +106,33 @@ var SharethroughAdapter = function SharethroughAdapter() {
     url = utils.tryAppendQueryString(url, 'bid_id', bid.bidId);
     url = utils.tryAppendQueryString(url, 'placement_key', pkey);
     url = utils.tryAppendQueryString(url, 'ijson', '$$PREBID_GLOBAL$$.strcallback');
-    // url = utils.tryAppendQueryString(url, 'v', '$prebid.version$');
+    url = utils.tryAppendQueryString(url, 'prebid_v', '$prebid.version$');
     // url = url.slice(0, -1);
     return url;
   }
 
   $$PREBID_GLOBAL$$.strcallback = function(bidResponse) {
-    var bidJson = bidResponse;//JSON.parse(bidResponse);
-    var bidId = bidJson.bidId;
+    var bidId = bidResponse.bidId;
     let bidObj = utils.getBidRequest(bidId);
-    console.log(bidJson);
+    console.log(bidResponse);
       try {
-        var windowLocation = `str_response_${bidId}`;
-        var pkey = utils.getBidIdParamater('pkey', bidObj.params);
         let bid = bidfactory.createBid(1, bidObj);
+
         bid.bidderCode = 'sharethrough';
-        bid.cpm = 100;//bidJson.creatives[0].cpm;
+        bid.cpm = bidResponse.creatives[0].cpm;
         const size = bidObj.sizes[0];
         bid.width = size[0];
         bid.height = size[1];
-        var bidJsonString = JSON.stringify(bidResponse);
-        bid.ad = `<div data-str-native-key="${pkey}" data-stx-response-name='${windowLocation}'></div><script>var ${windowLocation} = ${bidJsonString}</script><script src="//native.sharethrough.com/assets/sfp.js"></script>`;
-        bid.adserverRequestId = bidJson.adserverRequestId;
-        bid.winId = bidJson.creatives[0].auctionWinId;
+        bid.adserverRequestId = bidResponse.adserverRequestId;
+        bid.winId = bidResponse.creatives[0].auctionWinId;
         bid.pkey = pkey;
-        bidmanager.addBidResponse(bidObj.placementCode, bid);
 
+        var windowLocation = `str_response_${bidId}`;
+        var bidJsonString = JSON.stringify(bidResponse);
+        var pkey = utils.getBidIdParamater('pkey', bidObj.params);
+        bid.ad = `<div data-str-native-key="${pkey}" data-stx-response-name='${windowLocation}'></div><script>var ${windowLocation} = ${bidJsonString}</script><script src="//native.sharethrough.com/assets/sfp.js"></script>`;
+
+        bidmanager.addBidResponse(bidObj.placementCode, bid);
       } catch (e) {
         _handleInvalidBid(bidObj);
       }
