@@ -22,11 +22,13 @@ var bidfactory = require('../bidfactory.js');
 }
 */
 var BEACON_HOST = document.location.protocol + "//b.sharethrough.com/butler?" //{arid}{awid}{type}
-var BIDDER_CODE = "sharethrough"
+var BIDDER_CODE = "sharethrough";
+var BTLR_HOST = "http://localhost:3001";
 
 var SharethroughAdapter = function SharethroughAdapter() {
   const xmlHttp = new XMLHttpRequest();
   var placementCodeSet = new Set(); //placement codes we are competing in
+  var bidIdToPlacementCode = new Object();
 
   function fireWinBeacon(adserverRequestId, adWinId, type) {
     var winBeaconUrl = BEACON_HOST;// + "arid=" + adserverRequestId + "&awid=" + adWinId + "&type=" + type + "&foo=bar";
@@ -84,15 +86,43 @@ var SharethroughAdapter = function SharethroughAdapter() {
 
     console.log(params);
     pbjs.onEvent('bidWon', bidWon);
+    if (window.addEventListener){
+
+      addEventListener("message", receiveMessage, false)
+
+    } else {
+
+      attachEvent("onmessage", listener)
+
+    }
 
     // cycle through bids
     for (var i = 0; i < bids.length; i += 1) {
       var bidRequest = bids[i];
       placementCodeSet.add(bidRequest.placementCode);
+      bidIdToPlacementCode[bidRequest.bidId] = bidRequest;
 
       scriptUrl = _buildSharethroughCall(bidRequest);
-      adloader.loadScript(scriptUrl);
+      loadIFrame(scriptUrl);
     }
+  }
+
+  function receiveMessage(event) {
+    if(event.origin == BTLR_HOST) {
+      $$PREBID_GLOBAL$$.strcallback(JSON.parse(event.data).response);
+    }
+
+  }
+
+  function loadIFrame(url) {
+      var iframe = document.createElement("iframe");
+      iframe.src = url;
+      iframe.style.cssText = 'display:none;'
+      iframe.onload = function() {
+        console.log("loaded");
+      };
+      document.body.appendChild(iframe);
+      console.log(document);
   }
 
   // TODO: change to STX endpoint once it exists
@@ -101,7 +131,7 @@ var SharethroughAdapter = function SharethroughAdapter() {
     //   uri = '//btlr.sharethrough.com/v4?',
     //   url = document.location.protocol + uri;
 
-    var url = "http://localhost:3001/prebid/v1?";
+    var url = BTLR_HOST + "/v4?";
     console.log(bid.bidId)
     url = utils.tryAppendQueryString(url, 'bid_id', bid.bidId);
     url = utils.tryAppendQueryString(url, 'placement_key', pkey);
@@ -113,7 +143,8 @@ var SharethroughAdapter = function SharethroughAdapter() {
 
   $$PREBID_GLOBAL$$.strcallback = function(bidResponse) {
     var bidId = bidResponse.bidId;
-    let bidObj = utils.getBidRequest(bidId);
+    let bidObj = bidIdToPlacementCode[bidId];
+    console.log(bidObj);
     console.log(bidResponse);
       try {
         let bid = bidfactory.createBid(1, bidObj);
@@ -125,7 +156,7 @@ var SharethroughAdapter = function SharethroughAdapter() {
         bid.height = size[1];
         bid.adserverRequestId = bidResponse.adserverRequestId;
         bid.winId = bidResponse.creatives[0].auctionWinId;
-        
+
         var pkey = utils.getBidIdParamater('pkey', bidObj.params);
         bid.pkey = pkey;
 
