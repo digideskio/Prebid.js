@@ -125,11 +125,13 @@ var SharethroughAdapter = function SharethroughAdapter() {
         bid.height = size[1];
         bid.adserverRequestId = bidResponse.adserverRequestId;
         bid.winId = bidResponse.creatives[0].auctionWinId;
+        
+        var pkey = utils.getBidIdParamater('pkey', bidObj.params);
         bid.pkey = pkey;
 
         var windowLocation = `str_response_${bidId}`;
         var bidJsonString = JSON.stringify(bidResponse);
-        var pkey = utils.getBidIdParamater('pkey', bidObj.params);
+
         bid.ad = `<div data-str-native-key="${pkey}" data-stx-response-name='${windowLocation}'></div><script>var ${windowLocation} = ${bidJsonString}</script><script src="//native.sharethrough.com/assets/sfp.js"></script>`;
 
         bidmanager.addBidResponse(bidObj.placementCode, bid);
