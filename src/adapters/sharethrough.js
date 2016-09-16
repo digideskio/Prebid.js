@@ -21,23 +21,27 @@ var bidfactory = require('../bidfactory.js');
     ]
 }
 */
-const BEACON_HOST = document.location.protocol + "//b.sharethrough.com/butler?" //{arid}{awid}{type}
-const BIDDER_CODE = "sharethrough";
-const BTLR_HOST = "http://localhost:3001";   // TODO: change to STX endpoint once it exists
+// const str.STR_BEACON_HOST = document.location.protocol + "//b.sharethrough.com/butler?" //{arid}{awid}{type}
+const STR_BIDDER_CODE = "sharethrough";
+// const str.STR_BTLR_HOST = "http://localhost:3001";   // TODO: change to STX endpoint once it exists
 //   uri = '//btlr.sharethrough.com/v4?',
 const STR_VERSION = "0.1.0";
 
 var SharethroughAdapter = function SharethroughAdapter() {
   const xmlHttp = new XMLHttpRequest();
-  var placementCodeSet = new Set(); //placement codes we are competing in
-  var bidIdToPlacementCode = new Object();
+  
+  // var bidIdToPlacementCode = new Object();
+  var str = new Object();
+  str.STR_BTLR_HOST = "http://localhost:3001"; 
+  str.STR_BEACON_HOST = document.location.protocol + "//b.sharethrough.com/butler?";
+  str.placementCodeSet = new Set();//placement codes we are competing in
 
   function _callBids(params) {
     var bids = params.bids,
         scriptUrl,
         cacheRequest = false;
 
-    pbjs.onEvent('bidWon', _bidWon);
+    pbjs.onEvent('bidWon', str.bidWon);
 
     if (window.addEventListener){
       addEventListener("message", _receiveMessage, false)
@@ -48,18 +52,18 @@ var SharethroughAdapter = function SharethroughAdapter() {
     // cycle through bids
     for (var i = 0; i < bids.length; i += 1) {
       var bidRequest = bids[i];
-      placementCodeSet.add(bidRequest.placementCode);
-      bidIdToPlacementCode[bidRequest.bidId] = bidRequest;
+      str.placementCodeSet.add(bidRequest.placementCode);
+      // bidIdToPlacementCode[bidRequest.bidId] = bidRequest;
 
       scriptUrl = _buildSharethroughCall(bidRequest);
-      _loadIFrame(scriptUrl);
+      str.loadIFrame(scriptUrl);
     }
   }
 
   function _buildSharethroughCall(bid) {
     var pkey = utils.getBidIdParamater('pkey', bid.params);
 
-    var url = BTLR_HOST + "/header-bid/v1?";
+    var url = str.STR_BTLR_HOST + "/header-bid/v1?";
     console.log(bid.bidId)
     url = utils.tryAppendQueryString(url, 'bidId', bid.bidId);
     url = utils.tryAppendQueryString(url, 'placement_key', pkey);
@@ -69,7 +73,7 @@ var SharethroughAdapter = function SharethroughAdapter() {
     return url;
   }
 
-  function _loadIFrame(url) {
+  str.loadIFrame = function(url) {
     var iframe = document.createElement("iframe");
     iframe.src = url;
     iframe.style.cssText = 'display:none;'
@@ -81,7 +85,7 @@ var SharethroughAdapter = function SharethroughAdapter() {
   }
 
   function _receiveMessage(event) {
-    if(event.origin == BTLR_HOST) {
+    if(event.origin == str.STR_BTLR_HOST) {
       $$PREBID_GLOBAL$$.strcallback(JSON.parse(event.data).response);
     }
 
@@ -127,40 +131,40 @@ var SharethroughAdapter = function SharethroughAdapter() {
     bidmanager.addBidResponse(bidObj.placementCode, bid);
   }
 
-  var _bidWon = function() { //need pkey, adserverRequestId, bidId
+  str.bidWon = function() { //need pkey, adserverRequestId, bidId
     var curBidderCode = arguments[0].bidderCode;
     console.log("winner biddercode: ", curBidderCode);
     console.log(JSON.stringify(arguments));
-    if(curBidderCode != BIDDER_CODE && placementCodeSet.has(arguments[0].adUnitCode)) {
-      $$PREBID_GLOBAL$$.fireLoseBeacon(curBidderCode, arguments[0].cpm, "headerBidLose");
+    if(curBidderCode != STR_BIDDER_CODE && str.placementCodeSet.has(arguments[0].adUnitCode)) {
+      str.fireLoseBeacon(curBidderCode, arguments[0].cpm, "headerBidLose");
       return;
-    } else if(curBidderCode != BIDDER_CODE) {
+    } else if(curBidderCode != STR_BIDDER_CODE) {
       return;
     }
 
-    $$PREBID_GLOBAL$$.fireWinBeacon(arguments[0].adserverRequestId, arguments[0].winId, "headerBidWin");
+    str.fireWinBeacon(arguments[0].adserverRequestId, arguments[0].winId, "headerBidWin");
   }
 
-  $$PREBID_GLOBAL$$.fireLoseBeacon = function(winningBidderCode, winningCPM, type) {
-    var loseBeaconUrl = BEACON_HOST;
+  str.fireLoseBeacon = function(winningBidderCode, winningCPM, type) {
+    var loseBeaconUrl = str.STR_BEACON_HOST;
     loseBeaconUrl = utils.tryAppendQueryString(loseBeaconUrl, "winnerBidderCode", winningBidderCode);
     loseBeaconUrl = utils.tryAppendQueryString(loseBeaconUrl, "winnerCpm", winningCPM);
     loseBeaconUrl = utils.tryAppendQueryString(loseBeaconUrl, "type", type);
     loseBeaconUrl = appendEnvFields(loseBeaconUrl);
 
-    httpGetAsync(loseBeaconUrl, function(response) {console.log("lose beacon sent successfully")});
+    str.httpGetAsync(loseBeaconUrl, function(response) {console.log("lose beacon sent successfully")});
   }
 
-  $$PREBID_GLOBAL$$.fireWinBeacon = function(adserverRequestId, adWinId, type) {
+  str.fireWinBeacon = function(adserverRequestId, adWinId, type) {
     console.log("was totally fired");
-    var winBeaconUrl = BEACON_HOST;// + "arid=" + adserverRequestId + "&awid=" + adWinId + "&type=" + type + "&foo=bar";
+    var winBeaconUrl = str.STR_BEACON_HOST;// + "arid=" + adserverRequestId + "&awid=" + adWinId + "&type=" + type + "&foo=bar";
     winBeaconUrl = utils.tryAppendQueryString(winBeaconUrl, "arid", adserverRequestId);
     winBeaconUrl = utils.tryAppendQueryString(winBeaconUrl, "awid", adWinId);
     winBeaconUrl = utils.tryAppendQueryString(winBeaconUrl, "type", type);
     winBeaconUrl = utils.tryAppendQueryString(winBeaconUrl, "foo", "bar");
     winBeaconUrl = appendEnvFields(winBeaconUrl);
 
-    httpGetAsync(winBeaconUrl, function(response) {console.log("win beacon sent successfully")});
+    str.httpGetAsync(winBeaconUrl, function(response) {console.log("win beacon sent successfully")});
   }
 
 
@@ -172,7 +176,7 @@ var SharethroughAdapter = function SharethroughAdapter() {
     return url;
   }
 
-  function httpGetAsync(theUrl, callback) {
+  str.httpGetAsync = function(theUrl, callback) {
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function() { 
       console.log("ready state: " + xmlHttp.readyState);
@@ -188,8 +192,7 @@ var SharethroughAdapter = function SharethroughAdapter() {
 
   return {
     callBids: _callBids,
-    loadIFrame : _loadIFrame,
-    bidWon : _bidWon,
+    str : str,
   };
 };
 
