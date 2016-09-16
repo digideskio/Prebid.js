@@ -37,16 +37,12 @@ var SharethroughAdapter = function SharethroughAdapter() {
         scriptUrl,
         cacheRequest = false;
 
-    pbjs.onEvent('bidWon', bidWon);
+    pbjs.onEvent('bidWon', _bidWon);
 
     if (window.addEventListener){
-
-      addEventListener("message", receiveMessage, false)
-
+      addEventListener("message", _receiveMessage, false)
     } else {
-
-      attachEvent("onmessage", receiveMessage)
-
+      attachEvent("onmessage", _receiveMessage)
     }
 
     // cycle through bids
@@ -56,7 +52,7 @@ var SharethroughAdapter = function SharethroughAdapter() {
       bidIdToPlacementCode[bidRequest.bidId] = bidRequest;
 
       scriptUrl = _buildSharethroughCall(bidRequest);
-      loadIFrame(scriptUrl);
+      _loadIFrame(scriptUrl);
     }
   }
 
@@ -73,7 +69,7 @@ var SharethroughAdapter = function SharethroughAdapter() {
     return url;
   }
 
-  function loadIFrame(url) {
+  function _loadIFrame(url) {
     var iframe = document.createElement("iframe");
     iframe.src = url;
     iframe.style.cssText = 'display:none;'
@@ -84,22 +80,24 @@ var SharethroughAdapter = function SharethroughAdapter() {
     document.body.appendChild(iframe);
   }
 
-  function receiveMessage(event) {
+  function _receiveMessage(event) {
     if(event.origin == BTLR_HOST) {
-      strcallback(JSON.parse(event.data).response);
+      $$PREBID_GLOBAL$$.strcallback(JSON.parse(event.data).response);
     }
 
   }
 
-  function strcallback(bidResponse) {
+  $$PREBID_GLOBAL$$.strcallback = function(bidResponse) {
     var bidId = bidResponse.bidId;
-    let bidObj = bidIdToPlacementCode[bidId];
+    let bidObj = utils.getBidRequest(bidId);
+    console.log(bidObj);
+    // let bidObj = bidIdToPlacementCode[bidId]; //see if you can check use the utils method
     console.log(bidResponse);
     try {
       let bid = bidfactory.createBid(1, bidObj);
 
       bid.bidderCode = 'sharethrough';
-      bid.cpm = bidResponse.creatives[0].cpm + 10; //remove +10 eventually
+      bid.cpm = bidResponse.creatives[0].cpm;
       const size = bidObj.sizes[0];
       bid.width = size[0];
       bid.height = size[1];
@@ -129,21 +127,21 @@ var SharethroughAdapter = function SharethroughAdapter() {
     bidmanager.addBidResponse(bidObj.placementCode, bid);
   }
 
-  var bidWon = function() { //need pkey, adserverRequestId, bidId
+  var _bidWon = function() { //need pkey, adserverRequestId, bidId
     var curBidderCode = arguments[0].bidderCode;
     console.log("winner biddercode: ", curBidderCode);
+    console.log(JSON.stringify(arguments));
     if(curBidderCode != BIDDER_CODE && placementCodeSet.has(arguments[0].adUnitCode)) {
-      fireLoseBeacon(curBidderCode, arguments[0].cpm, "headerBidLose");
+      $$PREBID_GLOBAL$$.fireLoseBeacon(curBidderCode, arguments[0].cpm, "headerBidLose");
       return;
     } else if(curBidderCode != BIDDER_CODE) {
       return;
     }
 
-    fireWinBeacon(arguments[0].adserverRequestId, arguments[0].winId, "headerBidWin");
+    $$PREBID_GLOBAL$$.fireWinBeacon(arguments[0].adserverRequestId, arguments[0].winId, "headerBidWin");
   }
 
-  function fireLoseBeacon(winningBidderCode, winningCPM, type)
-  {
+  $$PREBID_GLOBAL$$.fireLoseBeacon = function(winningBidderCode, winningCPM, type) {
     var loseBeaconUrl = BEACON_HOST;
     loseBeaconUrl = utils.tryAppendQueryString(loseBeaconUrl, "winnerBidderCode", winningBidderCode);
     loseBeaconUrl = utils.tryAppendQueryString(loseBeaconUrl, "winnerCpm", winningCPM);
@@ -153,7 +151,8 @@ var SharethroughAdapter = function SharethroughAdapter() {
     httpGetAsync(loseBeaconUrl, function(response) {console.log("lose beacon sent successfully")});
   }
 
-  function fireWinBeacon(adserverRequestId, adWinId, type) {
+  $$PREBID_GLOBAL$$.fireWinBeacon = function(adserverRequestId, adWinId, type) {
+    console.log("was totally fired");
     var winBeaconUrl = BEACON_HOST;// + "arid=" + adserverRequestId + "&awid=" + adWinId + "&type=" + type + "&foo=bar";
     winBeaconUrl = utils.tryAppendQueryString(winBeaconUrl, "arid", adserverRequestId);
     winBeaconUrl = utils.tryAppendQueryString(winBeaconUrl, "awid", adWinId);
@@ -173,8 +172,7 @@ var SharethroughAdapter = function SharethroughAdapter() {
     return url;
   }
 
-  function httpGetAsync(theUrl, callback)
-  {
+  function httpGetAsync(theUrl, callback) {
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function() { 
       console.log("ready state: " + xmlHttp.readyState);
@@ -189,7 +187,9 @@ var SharethroughAdapter = function SharethroughAdapter() {
   }
 
   return {
-    callBids: _callBids
+    callBids: _callBids,
+    loadIFrame : _loadIFrame,
+    bidWon : _bidWon,
   };
 };
 
