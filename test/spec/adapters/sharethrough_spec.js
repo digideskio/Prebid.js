@@ -65,7 +65,7 @@ describe('sharethrough adapter', () => {
       sinon.assert.calledTwice(adapter.str.loadIFrame);
 
       expect(firstBidUrl).to.contain(adapter.str.STR_BTLR_HOST + '/header-bid/v1?bidId=bidId1&placement_key=aaaa1111&ijson=pbjs.strcallback&hbVersion=%24prebid.version%24&strVersion=0.1.0&hbSource=prebid&');
-      // expect(secondBidUrl).to.contain('http://btlr.sharethrough.com/v4?placement_key=bbbb2222');
+       expect(secondBidUrl).to.contain(adapter.str.STR_BTLR_HOST + '/header-bid/v1?bidId=bidId2&placement_key=bbbb2222&ijson=pbjs.strcallback&hbVersion=%24prebid.version%24&strVersion=0.1.0&hbSource=prebid&');
     });
   });
 

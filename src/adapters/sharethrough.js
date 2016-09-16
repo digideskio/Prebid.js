@@ -21,16 +21,12 @@ var bidfactory = require('../bidfactory.js');
     ]
 }
 */
-// const str.STR_BEACON_HOST = document.location.protocol + "//b.sharethrough.com/butler?" //{arid}{awid}{type}
 const STR_BIDDER_CODE = "sharethrough";
-// const str.STR_BTLR_HOST = "http://localhost:3001";   // TODO: change to STX endpoint once it exists
 //   uri = '//btlr.sharethrough.com/v4?',
 const STR_VERSION = "0.1.0";
 
 var SharethroughAdapter = function SharethroughAdapter() {
   const xmlHttp = new XMLHttpRequest();
-  
-  // var bidIdToPlacementCode = new Object();
   var str = new Object();
   str.STR_BTLR_HOST = "http://localhost:3001"; 
   str.STR_BEACON_HOST = document.location.protocol + "//b.sharethrough.com/butler?";
@@ -53,8 +49,6 @@ var SharethroughAdapter = function SharethroughAdapter() {
     for (var i = 0; i < bids.length; i += 1) {
       var bidRequest = bids[i];
       str.placementCodeSet.add(bidRequest.placementCode);
-      // bidIdToPlacementCode[bidRequest.bidId] = bidRequest;
-
       scriptUrl = _buildSharethroughCall(bidRequest);
       str.loadIFrame(scriptUrl);
     }
