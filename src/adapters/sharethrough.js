@@ -28,7 +28,7 @@ const STR_VERSION = "0.1.0";
 var SharethroughAdapter = function SharethroughAdapter() {
   const xmlHttp = new XMLHttpRequest();
   var str = new Object();
-  str.STR_BTLR_HOST = document.location.protocol + "//btlr.sharethrough.com";//http://localhost:3001"; 
+  str.STR_BTLR_HOST = document.location.protocol + "//btlr.sharethrough.com";
   str.STR_BEACON_HOST = document.location.protocol + "//b.sharethrough.com/butler?";
   str.placementCodeSet = new Set();//placement codes we are competing in
 
@@ -107,11 +107,11 @@ var SharethroughAdapter = function SharethroughAdapter() {
       bid.ad = `<div data-str-native-key="${pkey}" data-stx-response-name='${windowLocation}'>
                 </div>
                 <script>var ${windowLocation} = ${bidJsonString}</script>
-                <script src="//localhost:3000/assets/sfp-set-targeting.js"></script>
+                <script src="//native.sharethrough.com/assets/sfp-set-targeting.js"></script>
                 <script type='text/javascript'>
                 (function() {
                     var sfp_js = document.createElement('script');
-                    sfp_js.src = "//localhost:3000/assets/sfp.js";
+                    sfp_js.src = "//native.sharethrough.com/assets/sfp.js";
                     sfp_js.type = 'text/javascript';
                     sfp_js.charset = 'utf-8';
                     window.top.document.getElementsByTagName('body')[0].appendChild(sfp_js);

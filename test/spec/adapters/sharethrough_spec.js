@@ -290,7 +290,7 @@ describe('sharethrough adapter', () => {
 
     it('should call correct url', () => {
         let winUrl = adapter.str.httpGetAsync.firstCall.args[0];
-        expect(winUrl).to.contain(adapter.str.STR_BEACON_HOST + 'arid=sharethrough&awid=10&type=winbeacontype&foo=bar&hbVersion=%24prebid.version%24&strVersion=0.1.0&hbSource=prebid&');
+        expect(winUrl).to.contain(adapter.str.STR_BEACON_HOST + 'arid=sharethrough&awid=10&type=winbeacontype&hbVersion=%24prebid.version%24&strVersion=0.1.0&hbSource=prebid&');
     });
   });
 
