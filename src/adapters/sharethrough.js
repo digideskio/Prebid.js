@@ -104,7 +104,19 @@ var SharethroughAdapter = function SharethroughAdapter() {
       var windowLocation = `str_response_${bidId}`;
       var bidJsonString = JSON.stringify(bidResponse);
 
-      bid.ad = `<div data-str-native-key="${pkey}" data-stx-response-name='${windowLocation}'></div><script>var ${windowLocation} = ${bidJsonString}</script><script src="//native.sharethrough.com/assets/sfp.js"></script>`;
+      bid.ad = `<div data-str-native-key="${pkey}" data-stx-response-name='${windowLocation}'>
+                </div>
+                <script>var ${windowLocation} = ${bidJsonString}</script>
+                <script src="//localhost:3000/assets/sfp-set-targeting.js"></script>
+                <script type='text/javascript'>
+                (function() {
+                    var sfp_js = document.createElement('script');
+                    sfp_js.src = "//localhost:3000/assets/sfp.js";
+                    sfp_js.type = 'text/javascript';
+                    sfp_js.charset = 'utf-8';
+                    window.top.document.getElementsByTagName('body')[0].appendChild(sfp_js);
+                })();
+                </script>`;
 
       bidmanager.addBidResponse(bidObj.placementCode, bid);
     } catch (e) {
@@ -148,7 +160,6 @@ var SharethroughAdapter = function SharethroughAdapter() {
     winBeaconUrl = utils.tryAppendQueryString(winBeaconUrl, "arid", adserverRequestId);
     winBeaconUrl = utils.tryAppendQueryString(winBeaconUrl, "awid", adWinId);
     winBeaconUrl = utils.tryAppendQueryString(winBeaconUrl, "type", type);
-    winBeaconUrl = utils.tryAppendQueryString(winBeaconUrl, "foo", "bar");
     winBeaconUrl = appendEnvFields(winBeaconUrl);
 
     str.httpGetAsync(winBeaconUrl, function(response) {console.log("win beacon sent successfully")});
