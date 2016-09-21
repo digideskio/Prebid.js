@@ -65,7 +65,7 @@ describe('sharethrough adapter', () => {
       sinon.assert.calledTwice(adapter.str.loadIFrame);
 
       expect(firstBidUrl).to.contain(adapter.str.STR_BTLR_HOST + '/header-bid/v1?bidId=bidId1&placement_key=aaaa1111&ijson=pbjs.strcallback&hbVersion=%24prebid.version%24&strVersion=0.1.0&hbSource=prebid&');
-       expect(secondBidUrl).to.contain(adapter.str.STR_BTLR_HOST + '/header-bid/v1?bidId=bidId2&placement_key=bbbb2222&ijson=pbjs.strcallback&hbVersion=%24prebid.version%24&strVersion=0.1.0&hbSource=prebid&');
+      expect(secondBidUrl).to.contain(adapter.str.STR_BTLR_HOST + '/header-bid/v1?bidId=bidId2&placement_key=bbbb2222&ijson=pbjs.strcallback&hbVersion=%24prebid.version%24&strVersion=0.1.0&hbSource=prebid&');
     });
   });
 
@@ -115,7 +115,7 @@ describe('sharethrough adapter', () => {
                               ],
                               "stxUserId": ""
                             };
-
+                            
       pbjs.strcallback(bidderReponse1);
       pbjs.strcallback(bidderReponse2);
 
@@ -284,12 +284,12 @@ describe('sharethrough adapter', () => {
   describe('win beacon is fired', () => {
 
     beforeEach(() => {
-      sandbox.stub(adapter.str, 'httpGetAsync');
+      sandbox.stub(adapter.str, 'fireBeacon');
       adapter.str.fireWinBeacon('sharethrough', 10.0, 'winbeacontype');
     });
 
     it('should call correct url', () => {
-        let winUrl = adapter.str.httpGetAsync.firstCall.args[0];
+        let winUrl = adapter.str.fireBeacon.firstCall.args[0];
         expect(winUrl).to.contain(adapter.str.STR_BEACON_HOST + 'arid=sharethrough&awid=10&type=winbeacontype&hbVersion=%24prebid.version%24&strVersion=0.1.0&hbSource=prebid&');
     });
   });
@@ -297,12 +297,12 @@ describe('sharethrough adapter', () => {
   describe('lose beacon is fired', () => {
 
     beforeEach(() => {
-      sandbox.stub(adapter.str, 'httpGetAsync');
+      sandbox.stub(adapter.str, 'fireBeacon');
       adapter.str.fireLoseBeacon('someoneelse', 10.0, 'losebeacontype');
     });
 
     it('should call correct url', () => {
-        let winUrl = adapter.str.httpGetAsync.firstCall.args[0];
+        let winUrl = adapter.str.fireBeacon.firstCall.args[0];
         expect(winUrl).to.contain(adapter.str.STR_BEACON_HOST + 'winnerBidderCode=someoneelse&winnerCpm=10&type=losebeacontype&hbVersion=%24prebid.version%24&strVersion=0.1.0&hbSource=prebid&');
     });
   });
